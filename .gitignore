@@ -1,0 +1,61 @@
+# Dependencias (node_modules)
+packages/frontend/node_modules/
+packages/backend/node_modules/
+node_modules/
+
+# Dependencias Backend (Composer - si se usa en el futuro)
+packages/backend/vendor/
+
+# Archivos generados por Webpack (dist)
+packages/frontend/dist
+packages/backend/dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Archivos Docker temporales
+*.dockerignore
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Carpetas de volúmenes y datos persistentes (Docker)
+docker/volumes/
+mariadb_data/
+docker/db/data/
+
+# Archivos de cobertura Jest
+coverage/
+
+# Variables de entorno 
+# Excluir todos los archivos .env por defecto
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/.env.test
+**/.env.*.local
+
+# Permitir archivos de ejemplo
+!**/.env.example
+!**/.env.*.example
+
+# IDEs (IntelliJ IDEA, Visual Studio Code, etc.)
+.idea/
+.vscode/
+*.iml
+
+# Otros archivos temporales
+*.swp
+*.zip
+*.rar
+*.txt
+*~
+
+# Excluir archivos de configuración SSL locales
+docker/ssl/*.crt
+docker/ssl/*.key
+docker/ssl/*.pem

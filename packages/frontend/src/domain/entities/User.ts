@@ -1,0 +1,42 @@
+import { UserRole } from '@domain/constants/user';
+import { Entity } from '@domain/types/entity';
+
+/**
+ * User entity
+ * Represents a user in the system
+ */
+export interface User extends Entity {
+  username: string;
+  email: string;
+  password?: string; // Optional to not expose in responses
+  passwordHash?: string; // Solo para operaciones internas
+  firstName?: string;
+  lastName?: string;
+  role: UserRole;
+  isVerified?: boolean;
+  verificationToken?: string;
+  verificationExpiresAt?: Date;
+  resetToken?: string;
+  resetExpiresAt?: Date;
+}
+
+/**
+ * UserCredentials
+ * Used for login
+ */
+export interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+/**
+ * UserRegistration
+ * Used for user registration
+ */
+export interface UserRegistration {
+  username: string;
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}

@@ -1,0 +1,30 @@
+{
+  "name": "gestion-esports",
+  "version": "1.0.0",
+  "description": "Plataforma de gestión de esports",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "start:frontend": "lerna run --scope=@gestion-esports/frontend start",
+    "start:backend": "lerna run --scope=@gestion-esports/backend start",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "docker:build:nocache": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml build --no-cache",
+    "docker:up": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml up",
+    "docker:up:build": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml up --build",
+    "docker:prod": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up --build",
+    "docker:down": "docker compose -f docker/docker-compose.yml down -v --remove-orphans",
+    "docker:reset": "docker compose -f docker/docker-compose.yml down -v --rmi all --remove-orphans"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/cypress": "^0.1.6",
+    "lerna": "^8.2.2"
+  }
+}
