@@ -12,15 +12,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18
           registry-url: 'https://npm.pkg.github.com'
           scope: '@gestion-esports'
+
+      # Install root dependencies (for Lerna or global tools)
       - run: npm ci
-      - run: npm install
-      - run: npm run build
-      - run: npm run test
-      - run: npx lerna publish from-package --yes
+
+      # Install, build and test in backend
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./packages/backend
+
+      - name: Build backend
+        run: npm run build
+        working-directory: ./packages/backend
+
+      - name: Test backend
+        run: npm test
+        working-directory: ./packages/backend
+
+      # Install build and test in frontend
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./packages/frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./packages/frontend
+
+      - name: Test frontend
+        run: npm test
+        working-directory: ./packages/frontend
+
+      # Publish with Lerna
+      - name: Lerna publish
+        run: npx lerna publish from-package --yes
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
