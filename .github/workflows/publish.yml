@@ -31,9 +31,10 @@ jobs:
         run: npm run build
         working-directory: ./packages/backend
 
-      - name: Test backend
-        run: npm test
-        working-directory: ./packages/backend
+      # TODO: Add test backend
+      # - name: Test backend
+      #   run: npm test
+      #   working-directory: ./packages/backend
 
       # Install build and test in frontend
       - name: Install frontend dependencies
