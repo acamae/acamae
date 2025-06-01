@@ -1,34 +1,51 @@
+import { configureStore } from '@reduxjs/toolkit';
+import { persistReducer, persistStore } from 'redux-persist';
 
+import { authPersistConfig } from '@application/state/persistConfig';
+import sessionTimerMiddleware from '@application/state/sessionTimerMiddleware';
+import authReducer from '@application/state/slices/authSlice';
+import sessionTimerReducer from '@application/state/slices/sessionTimerSlice';
 import { LoginUseCase } from '@application/use-cases/auth/LoginUseCase';
+import { LogoutUseCase } from '@application/use-cases/auth/LogoutUseCase';
 import { RegisterUseCase } from '@application/use-cases/auth/RegisterUseCase';
 import { AuthApiRepository } from '@infrastructure/api/AuthApiRepository';
-import { configureStore } from '@reduxjs/toolkit';
 
-import authReducer from './auth/authSlice';
+import { ForgotPasswordUseCase } from '../use-cases/auth/ForgotPasswordUseCase';
+import { ResetPasswordUseCase } from '../use-cases/auth/ResetPasswordUseCase';
 
-// Create repositories
+// Auth repository
 const authRepository = new AuthApiRepository();
+const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 
-// Create use cases
+// Use cases
 const loginUseCase = new LoginUseCase(authRepository);
 const registerUseCase = new RegisterUseCase(authRepository);
+const logoutUseCase = new LogoutUseCase(authRepository);
+const forgotPasswordUseCase = new ForgotPasswordUseCase(authRepository);
+const resetPasswordUseCase = new ResetPasswordUseCase(authRepository);
 
+// Store
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
-    // Add other reducers here
+    auth: persistedAuthReducer,
+    sessionTimer: sessionTimerReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore redux-persist actions
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
       thunk: {
         extraArgument: {
           loginUseCase,
           registerUseCase,
-          // Add other use cases here
+          logoutUseCase,
+          forgotPasswordUseCase,
+          resetPasswordUseCase,
         },
       },
-    }),
+    }).concat(sessionTimerMiddleware),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export const persistor = persistStore(store);

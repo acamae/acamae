@@ -1,31 +1,38 @@
 import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-interface UseFormProps<T> {
+export type UseFormConfig<T> = {
   initialValues: T;
   onSubmit: (values: T) => void;
-  validate?: (values: T) => Partial<T>;
-}
+  validate?: (values: T) => Partial<Record<keyof T, string>>;
+};
+
+export type UseFormReturn<T> = {
+  values: T;
+  errors: Partial<Record<keyof T, string>>;
+  touched: Partial<Record<keyof T, boolean>>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (config: UseFormConfig<T>) => (e: React.FormEvent) => void;
+  isSubmitting?: boolean;
+};
 
 export const useForm = <T extends object>({
   initialValues,
   onSubmit,
   validate,
-}: UseFormProps<T>) => {
+}: UseFormConfig<T>) => {
   const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Partial<T>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>({} as Record<keyof T, boolean>);
   const { i18n } = useTranslation();
 
-  // Ejecutar validación SOLO cuando cambia el idioma, y solo para campos ya tocados
+  // Run validation only when the language changes and only for touched fields
   useEffect(() => {
-    if (validate && Object.keys(touched).length > 0) {
-      const validationErrors = validate(values);
-      setErrors(validationErrors);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.language]); // Solo depende del cambio de idioma, omitimos values y touched para evitar ciclos
+    const validationErrors =
+      validate && Object.keys(touched).length > 0 ? validate(values) || {} : {};
+    setErrors(validationErrors);
+  }, [i18n.language, validate, values, touched]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,7 +44,7 @@ export const useForm = <T extends object>({
         }) as T
     );
 
-    // Marcar el campo como tocado
+    // Set the field as touched
     setTouched(
       prev =>
         ({
@@ -46,36 +53,30 @@ export const useForm = <T extends object>({
         }) as Record<keyof T, boolean>
     );
 
-    // Validar si hay función de validación
-    if (validate) {
-      const validationErrors = validate({
-        ...values,
-        [name]: value,
-      } as T);
-      setErrors(validationErrors);
-    }
+    const validationErrors = validate ? validate({ ...values, [name]: value }) || {} : {};
+    setErrors(validationErrors);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Marcar todos los campos como tocados
+    // Set all fields as touched
     const allTouched = Object.keys(values).reduce(
       (acc, key) => ({ ...acc, [key]: true }),
       {} as Record<keyof T, boolean>
     );
+
     setTouched(allTouched);
 
-    if (validate) {
-      const validationErrors = validate(values);
-      setErrors(validationErrors);
+    const validationErrors = validate ? validate(values) || {} : {};
+    setErrors(validationErrors);
 
-      if (Object.keys(validationErrors).length > 0) {
-        return;
-      }
+    if (Object.keys(validationErrors).length > 0) {
+      return;
     }
 
     setIsSubmitting(true);
+
     try {
       await onSubmit(values);
     } catch (error) {

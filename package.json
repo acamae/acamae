@@ -3,13 +3,10 @@
   "version": "1.0.0",
   "description": "Plataforma de gestión de esports",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "start:frontend": "lerna run --scope=@gestion-esports/frontend start",
-    "start:backend": "lerna run --scope=@gestion-esports/backend start",
+    "start:backend": "lerna run --scope=@gestion-esports/backend start --passWithNoTests",
     "build": "lerna run build",
     "test": "lerna run test",
     "lint": "lerna run lint",
@@ -24,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/cypress": "^0.1.6",
     "lerna": "^8.2.2"
   }
 }

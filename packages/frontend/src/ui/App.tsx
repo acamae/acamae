@@ -1,13 +1,8 @@
-import { store } from '@application/state/store';
 import AppRoutes from '@ui/routes';
-import { Provider } from 'react-redux';
+import '@ui/styles/global.scss';
 
 function App() {
-  return (
-    <Provider store={store}>
-      <AppRoutes />
-    </Provider>
-  );
+  return <AppRoutes />;
 }
 
 export default App;

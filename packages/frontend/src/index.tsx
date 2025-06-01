@@ -1,26 +1,34 @@
-import { logWebVitalsReport } from '@shared/utils/webVitals';
-import App from '@ui/App';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import '@infrastructure/i18n';
+import { PersistGate } from 'redux-persist/integration/react';
 
-// Importar estilos globales si es necesario
-// import '@shared/styles/global.scss';
+import { store, persistor } from '@application/state/store';
+import { ToastProvider } from '@shared/services/ToastProvider';
+import { logWebVitalsReport } from '@shared/utils/webVitals';
+import App from '@ui/App';
+import '@infrastructure/i18n';
 
 const container = document.getElementById('root');
 
 if (!container) {
-  throw new Error('No se encontró el elemento con id "root" en el DOM.');
+  throw new Error('Element with id "root" not found in the DOM.');
 }
 
 const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <BrowserRouter>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </BrowserRouter>
+      </PersistGate>
+    </Provider>
   </React.StrictMode>
 );
 

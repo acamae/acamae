@@ -1,27 +1,39 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "jsx": "react-jsx",
+    "target": "es2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
     "esModuleInterop": true,
+
+    /* Bundler mode */
+    "baseUrl": "./src",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "types": ["node", "jest", "@testing-library/jest-dom", "cypress"],
+    
+    "typeRoots": ["./node_modules/@types", "./src/domain/types"],
+    "types": ["node", "jest", "cypress"],
     "paths": {
-      "@/*": ["src/*"],
-      "@ui/*": ["src/ui/*"],
-      "@domain/*": ["src/domain/*"],
-      "@application/*": ["src/application/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
-      "@i18n/*": ["src/infrastructure/i18n/*"],
-      "@shared/*": ["src/shared/*"]
-    }
+      "@/*": ["*"],
+      "@ui/*": ["ui/*"],
+      "@domain/*": ["domain/*"],
+      "@application/*": ["application/*"],
+      "@infrastructure/*": ["infrastructure/*"],
+      "@i18n/*": ["infrastructure/i18n/*"],
+      "@shared/*": ["shared/*"]
+    },
   },
-  "include": ["src/**/*", "*.ts", "cypress/**/*.ts"],
+  "include": ["cypress/**/*.ts", "src/**/*", "setupTests.ts", "jest.config.js", "cypress.config.js", "checkCoverage.mjs", "webpack.config.js"],
   "exclude": ["node_modules"]
 }

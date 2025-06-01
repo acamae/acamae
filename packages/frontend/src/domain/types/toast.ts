@@ -1,9 +1,26 @@
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType =
+  | 'Primary'
+  | 'Secondary'
+  | 'Success'
+  | 'Danger'
+  | 'Warning'
+  | 'Info'
+  | 'Dark';
 
 export interface ToastOptions {
   title?: string;
   message: string;
   type?: ToastType;
   duration?: number;
-  position?: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-} 
+  autohide?: boolean;
+  position?:
+    | 'top-start'
+    | 'top-center'
+    | 'top-end'
+    | 'middle-start'
+    | 'middle-center'
+    | 'middle-end'
+    | 'bottom-start'
+    | 'bottom-center'
+    | 'bottom-end';
+}

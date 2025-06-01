@@ -1,8 +1,8 @@
-import { useAuth } from '@ui/hooks/useAuth';
 import React, { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router-dom';
 
+import { useAuth } from '@ui/hooks/useAuth';
 
 interface PrivateRouteProps {
   children: ReactNode;
@@ -14,7 +14,11 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <p className="text-center mt-5">{t('session.checking')}</p>;
+    return (
+      <p className="text-center mt-5" data-testid="session-checking">
+        {t('session.checking')}
+      </p>
+    );
   }
 
   if (!isAuthenticated) {

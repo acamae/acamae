@@ -19,24 +19,3 @@ export interface User extends Entity {
   resetToken?: string;
   resetExpiresAt?: Date;
 }
-
-/**
- * UserCredentials
- * Used for login
- */
-export interface UserCredentials {
-  email: string;
-  password: string;
-}
-
-/**
- * UserRegistration
- * Used for user registration
- */
-export interface UserRegistration {
-  username: string;
-  email: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-}

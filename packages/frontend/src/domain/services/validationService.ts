@@ -2,7 +2,7 @@ import {
   EMAIL_REGEX,
   PASSWORD_REGEX,
   USERNAME_REGEX,
-  TOKEN_LENGTH
+  TOKEN_LENGTH,
 } from '@shared/constants/validation';
 
 /**

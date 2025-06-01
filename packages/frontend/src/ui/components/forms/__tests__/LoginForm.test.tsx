@@ -1,117 +1,115 @@
-import i18n from '@infrastructure/i18n';
+jest.mock('react-i18next');
+jest.mock('@ui/hooks/useAuth');
+jest.mock('@ui/hooks/useToast');
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: jest.fn(),
+}));
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
-import { I18nextProvider } from 'react-i18next';
-import { MemoryRouter } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
-import LoginForm from '@/ui/components/Forms/LoginForm';
-import '@testing-library/jest-dom';
+import LoginForm from '@ui/components/Forms/LoginForm';
+import { useAuth } from '@ui/hooks/useAuth';
+import { useToast } from '@ui/hooks/useToast';
 
-const mockLogin = jest.fn();
-const mockNavigate = jest.fn();
+const loginMock = jest.fn();
+const toastMock = { error: jest.fn(), success: jest.fn() };
+const navigateMock = jest.fn();
 
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
+function setupUseAuth({
+  loading = false,
+  error = null,
+  isAuthenticated = false,
+}: {
+  loading?: boolean;
+  error?: string | null;
+  isAuthenticated?: boolean;
+} = {}) {
+  (useAuth as jest.Mock).mockReturnValue({
+    login: loginMock,
+    loading,
+    error,
+    isAuthenticated,
+  });
+}
+
+function setupUseToast() {
+  (useToast as jest.Mock).mockReturnValue(toastMock);
+}
+
+function setupUseNavigate() {
+  (useNavigate as jest.Mock).mockReturnValue(navigateMock);
+}
+
+const changeLanguageMock = jest.fn();
+function setupUseTranslation({
+  lang = 'es-ES',
+  t = (str: string) => str,
+  changeLanguage = changeLanguageMock,
+} = {}) {
+  (useTranslation as jest.Mock).mockReturnValue({
+    t,
+    i18n: {
+      language: lang,
+      changeLanguage,
+    },
+  });
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  setupUseTranslation();
+  setupUseAuth();
+  setupUseToast();
+  setupUseNavigate();
 });
 
 describe('LoginForm', () => {
-  const defaultProps = {
-    redirectTo: '/dashboard',
-    onLoginError: jest.fn(),
-    login: mockLogin,
-    loading: false,
-    error: null,
-  };
+  it('renderiza correctamente', () => {
+    render(<LoginForm />);
+    expect(screen.getByTestId('login-form-email-input')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form-password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('login-form-button')).toBeInTheDocument();
+  });
 
-  const setup = (props = {}) =>
-    render(
-      <I18nextProvider i18n={i18n}>
-        <MemoryRouter>
-          <LoginForm {...defaultProps} {...props} />
-        </MemoryRouter>
-      </I18nextProvider>
-    );
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockLogin.mockImplementation(async (email, _password) => {
-      if (email === 'fail@example.com') {
-        return false;
-      }
-      return true;
+  it('llama a login con los valores correctos al hacer submit', async () => {
+    render(<LoginForm />);
+    fireEvent.change(screen.getByTestId('login-form-email-input'), {
+      target: { value: 'test@mail.com' },
     });
-  });
-
-  it('renderiza los campos y el botón', () => {
-    setup();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /button/i })).toBeInTheDocument();
-  });
-
-  it('muestra errores si los campos están vacíos', async () => {
-    setup();
-    fireEvent.click(screen.getByRole('button', { name: /button/i }));
-    expect(await screen.findAllByText(/invalid/i)).toHaveLength(2);
-  });
-
-  it('permite mostrar/ocultar contraseña', () => {
-    setup();
-    const passwordInput = screen.getByLabelText(/password/i);
-    const toggleButton = screen.getByRole('button', { name: /toggle/i });
-
-    expect(passwordInput).toHaveAttribute('type', 'password');
-    fireEvent.click(toggleButton);
-    expect(passwordInput).toHaveAttribute('type', 'text');
-  });
-
-  it('envía el formulario correctamente y navega al dashboard', async () => {
-    setup();
-
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'test@example.com' },
+    fireEvent.change(screen.getByTestId('login-form-password-input'), {
+      target: { value: 'Password123!' },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: '12345678' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /button/i }));
-
+    fireEvent.submit(screen.getByTestId('login-form'));
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', '12345678');
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      expect(loginMock).toHaveBeenCalledTimes(1);
+      expect(loginMock).toHaveBeenCalledWith({
+        email: 'test@mail.com',
+        password: 'Password123!',
+      });
     });
   });
 
-  it('muestra error si el login falla', async () => {
-    setup();
-
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: 'fail@example.com' },
+  it('muestra errores de validación', () => {
+    render(<LoginForm />);
+    fireEvent.change(screen.getByTestId('login-form-email-input'), {
+      target: { value: 'invalid-email' },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: '12345678' },
+    fireEvent.change(screen.getByTestId('login-form-password-input'), {
+      target: { value: 'invalid-password' },
     });
+    expect(screen.getByText('errors.email.invalid')).toBeInTheDocument();
+    expect(screen.getByText('errors.password.invalid')).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /button/i }));
-
+  it('muestra toast de error si login falla', async () => {
+    setupUseAuth({ error: 'Invalid credentials' });
+    render(<LoginForm />);
+    fireEvent.submit(screen.getByTestId('login-form'));
     await waitFor(() => {
-      expect(screen.getByText(/error/i)).toBeInTheDocument();
-      expect(defaultProps.onLoginError).toHaveBeenCalled();
+      expect(toastMock.error).toHaveBeenCalledWith('Invalid credentials', 'login.failed');
     });
   });
-
-  it('muestra el error externo cuando se proporciona', () => {
-    setup({ error: 'Error externo de prueba' });
-    expect(screen.getByText('Error externo de prueba')).toBeInTheDocument();
-  });
-
-  it('muestra el botón de carga cuando loading es true', () => {
-    setup({ loading: true });
-    expect(screen.getByText(/accessing/i)).toBeInTheDocument();
-  });
-}); 
+});

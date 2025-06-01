@@ -1,7 +1,24 @@
+import { AxiosError, AxiosResponse } from 'axios';
+
+import {
+  ApiPromise,
+  ApiResponse,
+  ForgotPasswordPayload,
+  LoginPayload,
+  RegisterPayload,
+  ResetPasswordPayload,
+} from '@/domain/types/apiSchema';
 import { USER_ROLES } from '@domain/constants/user';
 import { User } from '@domain/entities/User';
 import { AuthRepository } from '@domain/repositories/AuthRepository';
 import { UserResponse } from '@domain/types/api';
+import {
+  API_ROUTES,
+  getUserByIdUrl,
+  getUpdateUserByIdUrl,
+  getDeleteUserByIdUrl,
+  getAuthResetPasswordUrl,
+} from '@shared/constants/apiRoutes';
 import api from '@shared/services/axiosService';
 
 function mapUserResponse(data: UserResponse): User {
@@ -9,95 +26,230 @@ function mapUserResponse(data: UserResponse): User {
     id: data.id,
     email: data.email,
     username: data.username,
-    role: (data.role === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER),
+    role: data.role === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER,
     createdAt: new Date(data.createdAt),
-    updatedAt: new Date(data.updatedAt)
+    updatedAt: new Date(data.updatedAt),
   };
 }
 
+/**
+ * Map the response from the AxiosResponse type to the ApiResponseSuccess type
+ * @param response AxiosResponse
+ * @description 2xx response with data
+ * @returns ApiResponseSuccess
+ */
+function mapApiAxiosResponseError<T>({
+  response,
+}: {
+  response: AxiosResponse<T>; // data, status, statusText, headers, config, request?
+}): ApiResponse<T> {
+  return {
+    data: response.data,
+    status: response.status,
+    success: false,
+  };
+}
+
+/**
+ * Map the error from the AxiosError type to the ApiError type
+ * @param error AxiosError
+ * @description 4xx or 5xx response with error
+ * @returns ApiError
+ */
+function mapApiAxiosRequestError<T>({
+  error,
+}: {
+  error: AxiosError<T>; // response, request, status, cause, code, message, name, stack, toJSON
+}): ApiResponse<T> {
+  return {
+    success: false,
+    status: error.status ?? 500,
+    message: error.message ?? 'A request error occurred',
+    code: error.code ?? 'REQUEST_ERROR',
+  };
+}
+
+/**
+ * Map the unknown error from the AxiosError type to the ApiError type
+ * @param error AxiosError
+ * @description unknown error
+ * @returns ApiError
+ */
+function mapApiAxiosUnknownError<T>(): ApiResponse<T> {
+  return {
+    success: false,
+    status: 500,
+    message: 'An unknown error occurred',
+    code: 'UNKNOWN_ERROR',
+  };
+}
+
+/**
+ * Map the response from the AxiosResponse type to the ApiResponseSuccess type
+ * @param response AxiosResponse
+ * @description 2xx response with data
+ * @returns ApiResponseSuccess
+ */
+function handleApiSuccess<T>({
+  response,
+}: {
+  response: AxiosResponse<T>; // data, status, statusText, headers, config, request?
+}): ApiResponse<T> {
+  return {
+    data: response.data,
+    status: response.status,
+    success: response.status >= 200 && response.status < 300,
+  };
+}
+
+/**
+ * Map the error from the AxiosError type to the ApiError type
+ * @param error AxiosError
+ * @description 4xx or 5xx response with error
+ * @returns ApiError
+ */
+function handleApiError<T>(error: unknown): ApiResponse<T> {
+  if (error instanceof AxiosError && error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    return mapApiAxiosResponseError({ response: error.response });
+  } else if (error instanceof AxiosError && error.request) {
+    // The request was made but no response was received
+    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+    // http.ClientRequest in node.js
+    return mapApiAxiosRequestError({ error });
+  }
+
+  // Something happened in setting up the request that triggered an Error
+  return mapApiAxiosUnknownError();
+}
+
 export class AuthApiRepository implements AuthRepository {
-  async login(email: string, password: string): Promise<User> {
+  async login(payload: LoginPayload): ApiPromise<User> {
     try {
-      const { data } = await api.post<UserResponse>('/auth/login', { email, password });
-      return mapUserResponse(data);
-    } catch (error) {
-      throw new Error('Login failed');
+      const response = await api.post(API_ROUTES.AUTH.LOGIN, {
+        ...payload,
+      });
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: { ...mapUserResponse(response.data) },
+        },
+      });
+    } catch (error: unknown) {
+      return handleApiError(error);
     }
   }
 
-  async register(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+  async register(payload: RegisterPayload): ApiPromise<User> {
     try {
-      const { data } = await api.post<UserResponse>('/auth/register', user);
-      return mapUserResponse(data);
+      const response = await api.post(API_ROUTES.AUTH.REGISTER, payload);
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: { ...mapUserResponse(response.data) },
+        },
+      });
     } catch (error) {
-      throw new Error('Registration failed');
+      return handleApiError(error);
     }
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(payload: ForgotPasswordPayload): ApiPromise<void> {
     try {
-      await api.post('/auth/forgot-password', { email });
+      const response = await api.post(API_ROUTES.AUTH.FORGOT_PASSWORD, payload);
+      return handleApiSuccess({ response });
     } catch (error) {
-      throw new Error('Forgot password request failed');
+      return handleApiError(error);
     }
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(payload: ResetPasswordPayload): ApiPromise<void> {
     try {
-      await api.post('/auth/reset-password', { token, password: newPassword });
+      const response = await api.post(getAuthResetPasswordUrl(payload.token), {
+        newPassword: payload.newPassword,
+      });
+      return handleApiSuccess({ response });
     } catch (error) {
-      throw new Error('Reset password failed');
+      return handleApiError(error);
     }
   }
 
-  async logout(): Promise<void> {
+  async logout(): ApiPromise<void> {
     try {
-      await api.post('/auth/logout');
+      const response = await api.post(API_ROUTES.AUTH.LOGOUT);
+      return handleApiSuccess({ response });
     } catch (error) {
-      throw new Error('Logout failed');
+      return handleApiError(error);
     }
   }
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(): ApiPromise<User> {
     try {
-      const { data } = await api.get<UserResponse>('/auth/me');
-      return mapUserResponse(data);
+      const response = await api.get(API_ROUTES.AUTH.ME);
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: { ...mapUserResponse(response.data) },
+        },
+      });
     } catch (error) {
-      return null;
+      return handleApiError(error);
     }
   }
 
-  async findAll(): Promise<User[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  async findById(id: string): Promise<User | null> {
+  async findAll(): ApiPromise<User[]> {
     try {
-      const { data } = await api.get<UserResponse>(`/users/${id}`);
-      return mapUserResponse(data);
+      const response = await api.get(API_ROUTES.USERS.GET_ALL);
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: response.data.map(mapUserResponse),
+        },
+      });
     } catch (error) {
-      return null;
+      return handleApiError(error);
     }
   }
 
-  async save(entity: User): Promise<User> {
+  async findById(id: string): ApiPromise<User | null> {
     try {
-      const { data } = await api.put<UserResponse>(`/users/${entity.id}`, {
+      const response = await api.get(getUserByIdUrl(id));
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: { ...mapUserResponse(response.data) },
+        },
+      });
+    } catch (error) {
+      return handleApiError(error);
+    }
+  }
+
+  async save(entity: User): ApiPromise<User> {
+    try {
+      const response = await api.put(getUpdateUserByIdUrl(entity.id), {
         email: entity.email,
         username: entity.username,
-        role: entity.role
+        role: entity.role,
       });
-      return mapUserResponse(data);
+      return handleApiSuccess({
+        response: {
+          ...response,
+          data: { ...mapUserResponse(response.data) },
+        },
+      });
     } catch (error) {
-      throw new Error('Failed to update user');
+      return handleApiError(error);
     }
   }
-  
-  async delete(id: string): Promise<void> {
+
+  async delete(id: string): ApiPromise<void> {
     try {
-      await api.delete(`/users/${id}`);
+      const response = await api.delete(getDeleteUserByIdUrl(id));
+      return handleApiSuccess({ response });
     } catch (error) {
-      throw new Error('Failed to delete user');
+      return handleApiError(error);
     }
   }
 }

@@ -1,4 +1,8 @@
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
+import ResendVerificationPage from '@/ui/pages/ResendVerificationPage';
+import ResetPasswordPage from '@/ui/pages/ResetPasswordPage';
 import PrivateRoute from '@ui/components/PrivateRoute';
 import MainLayout from '@ui/layouts/MainLayout';
 import PublicLayout from '@ui/layouts/PublicLayout';
@@ -12,15 +16,11 @@ import HomePage from '@ui/pages/HomePage';
 import LoginPage from '@ui/pages/LoginPage';
 import NotFoundPage from '@ui/pages/NotFoundPage';
 import RegisterPage from '@ui/pages/RegisterPage';
-import ResendVerificationPage from '@ui/pages/ResendVerificationPage';
-import ResetPasswordPage from '@ui/pages/ResetPasswordPage';
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Rutas públicas con PublicLayout */}
+      {/* Public routes with PublicLayout */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -34,7 +34,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/resend-verification" element={<ResendVerificationPage />} />
       </Route>
 
-      {/* Rutas privadas con MainLayout */}
+      {/* Private routes with MainLayout */}
       <Route element={<MainLayout />}>
         <Route
           path="/dashboard"
@@ -46,7 +46,7 @@ const AppRoutes: React.FC = () => {
         />
       </Route>
 
-      {/* Página 404 */}
+      {/* 404 page */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

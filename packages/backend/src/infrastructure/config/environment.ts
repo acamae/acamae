@@ -1,6 +1,5 @@
 import path from 'path';
 
-import { BackendEnvironment } from '@domain/types/environment';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 

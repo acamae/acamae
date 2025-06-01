@@ -48,7 +48,7 @@ export class AuthService {
    */
   async verifyEmail(token: string): Promise<boolean> {
     const users = await this.userRepository.findAll();
-    const user = users.find(u => u.verificationToken === token && u.verificationExpiresAt > new Date());
+    const user = users.find(u => u.verificationToken === token && u.verificationExpiresAt && u.verificationExpiresAt > new Date());
 
     if (!user) {
       throw new Error('Token de verificación inválido o expirado');
@@ -114,7 +114,7 @@ export class AuthService {
    */
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
     const users = await this.userRepository.findAll();
-    const user = users.find(u => u.resetToken === token && u.resetExpiresAt > new Date());
+    const user = users.find(u => u.resetToken === token && u.resetExpiresAt && u.resetExpiresAt > new Date());
 
     if (!user) {
       throw new Error('Token de restablecimiento inválido o expirado');
@@ -125,7 +125,7 @@ export class AuthService {
     });
 
     // Limpiar el token de restablecimiento
-    await this.userRepository.setResetToken(user.id, null, null);
+    await this.userRepository.setResetToken(user.id, '', new Date());
 
     return true;
   }
@@ -141,5 +141,10 @@ export class AuthService {
     } catch (_error) {
       return null;
     }
+  }
+
+  async logout(): Promise<void> {
+    // Invalidate the token
+    console.log('logout');
   }
 } 

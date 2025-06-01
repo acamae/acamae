@@ -32,10 +32,14 @@ export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Mínimo 8 caracteres, al menos una letra mayúscula, una minúscula y un número
  * Ahora también permite caracteres especiales
  */
-export const PASSWORD_REGEX = new RegExp(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{${MIN_PASSWORD_LENGTH},}$`);
+export const PASSWORD_REGEX = new RegExp(
+  `^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{${MIN_PASSWORD_LENGTH},}$`
+);
 
 /**
  * Expresión regular para validar nombres de usuario
  * Solo letras, números y guiones bajos, 3-20 caracteres
  */
-export const USERNAME_REGEX = new RegExp(`^[a-zA-Z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`); 
+export const USERNAME_REGEX = new RegExp(
+  `^[a-zA-Z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`
+);

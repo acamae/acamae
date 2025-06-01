@@ -1,77 +1,86 @@
-import env from '@infrastructure/config/environment';
-import { resetSessionTimer } from '@shared/utils/sessionResetter';
 import axios, { AxiosHeaders } from 'axios';
 
-/**
- * Instancia de Axios preconfigurada para la comunicación con la API.
- * Incluye manejo automático de token y errores de autenticación.
- */
-// Crear una instancia de axios con la configuración centralizada
+import { localStorageService } from '@/infrastructure/storage/localStorageService';
+import { resetTimer } from '@application/state/slices/sessionTimerSlice';
+import { store } from '@application/state/store';
+import { API_ROUTES } from '@shared/constants/apiRoutes';
+
+console.log('Registrando interceptor de Axios');
+
+const SESSION_RENEWAL_ENDPOINTS = [
+  API_ROUTES.AUTH.LOGIN,
+  API_ROUTES.AUTH.REGISTER,
+  API_ROUTES.AUTH.REFRESH_TOKEN,
+  API_ROUTES.AUTH.ME,
+];
+
 const api = axios.create({
-  baseURL: env.REACT_APP_API_URL,
+  baseURL: process.env.REACT_APP_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: env.REACT_APP_API_TIMEOUT,
-  withCredentials: true, // Para enviar cookies en peticiones CORS
+  timeout: Number(process.env.REACT_APP_API_TIMEOUT) || 10000,
+  withCredentials: true, // Send cookies in cross-origin requests
 });
 
-// Interceptor de peticiones
 api.interceptors.request.use(
-  (config) => {
-    // Obtener token de autenticación del almacenamiento local
-    const token = localStorage.getItem(env.AUTH_TOKEN_KEY);
-    
-    // Si existe un token, añadirlo a las cabeceras
+  config => {
+    // Get authentication token from local storage
+
+    const token = store.getState().auth.token;
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // If there is a token, add it to the headers
+
     if (token) {
       if (!config.headers) config.headers = {} as AxiosHeaders;
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Reiniciar el temporizador de sesión con cada petición
-    resetSessionTimer(() => {
-      api.get('/auth/me').catch(() => {
-        // Ignoramos errores de verificación de sesión
-      });
-    });
-    
+
     return config;
   },
-  (error) => {
+
+  error => {
     return Promise.reject(error);
   }
 );
 
-// Interceptor de respuestas
 api.interceptors.response.use(
-  (response) => {
-    // Registrar analíticas si está habilitado
-    if (env.REACT_APP_ENABLE_ANALYTICS) {
-      // Código para registrar analíticas
+  response => {
+    const url = response.config.url || '';
+
+    if (JSON.parse(String(process.env.REACT_APP_ENABLE_ANALYTICS).toLowerCase())) {
       console.log('Analytics tracking enabled for API calls');
     }
-    
-    // Reiniciar el temporizador de sesión con cada respuesta
-    resetSessionTimer(() => {
-      api.get('/auth/me').catch(() => {
-        // Ignoramos errores de verificación de sesión
-      });
-    });
-    
+
+    // If the URL is in the list of endpoints that renew the session
+    if (SESSION_RENEWAL_ENDPOINTS.some(endpoint => url.includes(endpoint))) {
+      store.dispatch(resetTimer());
+    }
+
     return response;
   },
-  (error) => {
+
+  error => {
+    const url = error.config?.url || '';
+
     if (error.response?.status === 401) {
-      // Manejar errores de autenticación (redirección, mostrar mensaje, etc.)
-      console.error('Error de autenticación:', error);
-      
-      // Limpiar token inválido
-      localStorage.removeItem(env.AUTH_TOKEN_KEY);
-      localStorage.removeItem(env.REFRESH_TOKEN_KEY);
+      console.error('Authentication error:', error.code, error.message);
+
+      // Clear invalid token
+      localStorageService.remove('REACT_APP_AUTH_TOKEN_KEY');
+      localStorageService.remove('REACT_APP_REFRESH_TOKEN_KEY');
     }
+    // If the URL is in the list of endpoints that renew the session
+    if (SESSION_RENEWAL_ENDPOINTS.some(endpoint => url.includes(endpoint))) {
+      store.dispatch(resetTimer());
+    }
+
     return Promise.reject(error);
   }
 );
 
 export default api;
-

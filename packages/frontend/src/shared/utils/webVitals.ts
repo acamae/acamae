@@ -9,21 +9,21 @@ interface WebVitalsReport {
   timestamp: string;
 }
 
-// Función para determinar si estamos en desarrollo
+// Function to determine if we are in development
 const isDevelopment = (): boolean => {
-  // Verificar si estamos en localhost
+  // Check if we are on localhost
   return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 };
 
 const shouldReportWebVitals = (): boolean => {
-  // Siempre reportar en desarrollo
+  // Always report in development
   if (isDevelopment()) {
-    console.log('Web Vitals: Modo desarrollo detectado, reportando métricas');
+    console.log('Web Vitals: Development mode detected, reporting metrics');
     return true;
   }
 
-  // En producción, no reportar por defecto
-  console.log('Web Vitals: No se reportarán métricas en producción');
+  // Do not report in production
+  console.log('Web Vitals: Metrics will not be reported in production');
   return false;
 };
 
@@ -32,21 +32,6 @@ const formatMetricValue = (metric: Metric): string => {
   const delta = metric.delta ? ` (${metric.delta > 0 ? '+' : ''}${metric.delta.toFixed(2)})` : '';
   return `${value}${delta}`;
 };
-
-// Nota: Función eliminada ya que no se utiliza actualmente
-// Si se necesita en el futuro, descomentar:
-// const getRatingColor = (rating: string): string => {
-//   switch (rating) {
-//     case 'good':
-//       return '#4CAF50'; // Verde
-//     case 'needs-improvement':
-//       return '#FFC107'; // Amarillo
-//     case 'poor':
-//       return '#F44336'; // Rojo
-//     default:
-//       return '#9E9E9E'; // Gris
-//   }
-// };
 
 const reportWebVitals = (onPerfEntry?: (metric: Metric) => void) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {

@@ -2,8 +2,8 @@ import cors from 'cors';
 import express from 'express';
 
 // Importar la configuración en lugar de dotenv
-import { config } from './infrastructure/config/environment';
-import apiRoutes from './infrastructure/routes';
+import { config } from '@infrastructure/config/environment';
+import apiRoutes from '@infrastructure/routes';
 
 const app = express();
 const PORT = config.PORT;
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

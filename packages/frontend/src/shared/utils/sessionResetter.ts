@@ -21,4 +21,4 @@ export function clearSessionTimer() {
     clearTimeout(sessionTimeout);
     sessionTimeout = null;
   }
-} 
+}

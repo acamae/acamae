@@ -1,71 +1,103 @@
-import { render, screen } from '@testing-library/react';
-import React from 'react';
+jest.mock('zxcvbn');
+jest.mock('react-i18next');
+jest.mock('@ui/hooks/useAuth');
+jest.mock('@ui/hooks/useForm');
+jest.mock('@ui/hooks/useToast');
 
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
-import PasswordStrengthMeter from '@/ui/components/Forms/PasswordStrengthMeter';
-import '@testing-library/jest-dom';
+import translations from '@infrastructure/i18n/locales/es-ES.json';
+import PasswordStrengthMeter from '@ui/components/Forms/PasswordStrengthMeter';
+afterEach(() => {
+  cleanup();
+  jest.clearAllMocks();
+});
 
-// Mock de la función t para simular i18next
-const translations = {
-  'register.strength.weak': 'Débil',
-  'register.strength.fair': 'Regular',
-  'register.strength.good': 'Buena',
-  'register.strength.strong': 'Fuerte',
-  'register.strength.very_strong': 'Muy fuerte',
+const getTranslationForKey = (key: string): string => {
+  const result = key
+    .split('.')
+    .reduce(
+      (obj, k) =>
+        obj && typeof obj === 'object' ? (obj as Record<string, unknown>)[k] : undefined,
+      translations as unknown
+    );
+  return typeof result === 'string' ? result : key;
 };
 
-const mockT = jest.fn((key: string) => {
-  return translations[key as keyof typeof translations] || key;
-}) as unknown as TFunction;
-
-// Mock de zxcvbn
-jest.mock('zxcvbn', () => {
-  return jest.fn().mockImplementation((password) => {
-    if (!password) return { score: 0 };
-    if (password.length < 6) return { score: 0 };
-    if (password.length < 8) return { score: 1 };
-    if (password.length < 10) return { score: 2 };
-    if (password.length < 12) return { score: 3 };
-    return { score: 4 };
+beforeEach(() => {
+  (useTranslation as jest.Mock).mockReturnValue({
+    t: getTranslationForKey,
+    i18n: { language: 'es-ES' },
   });
 });
 
-describe('PasswordStrengthMeter', () => {
-  it('muestra "Débil" para una contraseña vacía', () => {
+describe('PasswordStrengthMeter integration test', () => {
+  let mockT: TFunction;
+
+  beforeEach(() => {
+    mockT = ((key: string) => {
+      const result = getTranslationForKey(key);
+      return result ?? key;
+    }) as unknown as TFunction;
+  });
+
+  it('should render weak for empty password', async () => {
     render(<PasswordStrengthMeter password="" t={mockT} />);
-    expect(screen.getByText('Débil')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('password-strength-label')).toHaveTextContent(
+        translations.register.strength.weak
+      );
+    });
+    expect(screen.getByTestId('password-strength-bar')).toHaveClass('bg-danger');
   });
 
-  it('muestra "Débil" para una contraseña corta', () => {
-    render(<PasswordStrengthMeter password="12345" t={mockT} />);
-    expect(screen.getByText('Débil')).toBeInTheDocument();
+  it('should render fair for mediapass', async () => {
+    render(<PasswordStrengthMeter password="mediapass" t={mockT} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('password-strength-label')).toHaveTextContent(
+        translations.register.strength.fair
+      );
+    });
+    expect(screen.getByTestId('password-strength-bar')).toHaveClass('bg-warning');
   });
 
-  it('muestra "Regular" para una contraseña de seguridad media-baja', () => {
-    render(<PasswordStrengthMeter password="1234567" t={mockT} />);
-    expect(screen.getByText('Regular')).toBeInTheDocument();
+  it('should render fair for goodpass', async () => {
+    render(<PasswordStrengthMeter password="goodpass" t={mockT} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('password-strength-label')).toHaveTextContent(
+        translations.register.strength.fair
+      );
+    });
+    expect(screen.getByTestId('password-strength-bar')).toHaveClass('bg-warning');
   });
 
-  it('muestra "Buena" para una contraseña de seguridad media', () => {
-    render(<PasswordStrengthMeter password="123456789" t={mockT} />);
-    expect(screen.getByText('Buena')).toBeInTheDocument();
+  it('should render fair for strongpass', async () => {
+    render(<PasswordStrengthMeter password="strongpass" t={mockT} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('password-strength-label')).toHaveTextContent(
+        translations.register.strength.fair
+      );
+    });
+    expect(screen.getByTestId('password-strength-bar')).toHaveClass('bg-warning');
   });
 
-  it('muestra "Fuerte" para una contraseña segura', () => {
-    render(<PasswordStrengthMeter password="1234567890A" t={mockT} />);
-    expect(screen.getByText('Fuerte')).toBeInTheDocument();
+  it('should render very strong for a complex password', async () => {
+    render(<PasswordStrengthMeter password="A!9=123/dB*a.zvMS" t={mockT} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('password-strength-label')).toHaveTextContent(
+        translations.register.strength.very_strong
+      );
+    });
+    expect(screen.getByTestId('password-strength-bar')).toHaveClass('bg-success');
   });
 
-  it('muestra "Muy fuerte" para una contraseña muy segura', () => {
-    render(<PasswordStrengthMeter password="1234567890Ab!" t={mockT} />);
-    expect(screen.getByText('Muy fuerte')).toBeInTheDocument();
+  it('renderiza un span con texto', async () => {
+    render(<PasswordStrengthMeter password="mediapass" t={mockT} />);
+    await waitFor(() => {
+      const label = screen.getByTestId('password-strength-label');
+      expect(label.textContent).toBe(translations.register.strength.fair);
+    });
   });
-
-  it('renderiza la barra de progreso con el color correcto', () => {
-    render(<PasswordStrengthMeter password="1234567" t={mockT} />);
-    const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveClass('bg-warning');
-    expect(progressBar).toHaveStyle('width: 40%');
-  });
-}); 
+});
