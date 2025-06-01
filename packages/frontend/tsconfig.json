@@ -6,22 +6,17 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "esModuleInterop": true,
-
-    /* Bundler mode */
     "baseUrl": "./src",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
-    
     "typeRoots": ["./node_modules/@types", "./src/domain/types"],
     "types": ["node", "jest", "cypress"],
     "paths": {
@@ -32,7 +27,7 @@
       "@infrastructure/*": ["infrastructure/*"],
       "@i18n/*": ["infrastructure/i18n/*"],
       "@shared/*": ["shared/*"]
-    },
+    }
   },
   "include": ["cypress/**/*.ts", "src/**/*", "setupTests.ts", "jest.config.js", "cypress.config.js", "checkCoverage.mjs", "webpack.config.js"],
   "exclude": ["node_modules"]

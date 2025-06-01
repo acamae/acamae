@@ -1,5 +1,5 @@
 export default {
-  rootDir: './',
+  rootDir: '.',
   preset: 'ts-jest',
   testEnvironment: 'jest-fixed-jsdom',
   verbose: true,
@@ -32,9 +32,7 @@ export default {
   resetMocks: true,
   clearMocks: true,
   restoreMocks: true,
-  moduleDirectories: [
-    'node_modules',
-  ],
+  moduleDirectories: ['node_modules'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
   coverageThreshold: {

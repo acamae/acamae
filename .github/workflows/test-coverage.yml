@@ -2,49 +2,45 @@ name: Test Coverage Check
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Install frontend dependencies
         working-directory: ./packages/frontend
         run: npm ci
-        
-      - name: Install missing packages
-        working-directory: ./packages/frontend
-        run: npm install mini-css-extract-plugin --save-dev
-      
+
       - name: Run tests with coverage and check threshold
         working-directory: ./packages/frontend
         run: npm run test:coverage
-      
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: packages/frontend/coverage
           retention-days: 7
-      
+
       - name: Comment PR with coverage report
         if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v3
         with:
           directory: ./packages/frontend/coverage
-          fail_ci_if_error: true 
+          fail_ci_if_error: false

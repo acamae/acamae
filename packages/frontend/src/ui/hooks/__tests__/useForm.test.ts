@@ -91,7 +91,7 @@ describe('useForm Hook', () => {
     expect(mockValidate).toHaveBeenCalledTimes(0);
 
     act(() => {
-      setupUseTranslation({ lang: 'en' });
+      setupUseTranslation({ lang: 'en-GB' });
     });
     rerender();
 
@@ -361,7 +361,7 @@ describe('useForm Hook', () => {
         })
       );
       act(() => {
-        setupUseTranslation({ lang: 'en' });
+        setupUseTranslation({ lang: 'en-GB' });
       });
       rerender();
       expect(mockValidate).not.toHaveBeenCalled();
@@ -378,7 +378,7 @@ describe('useForm Hook', () => {
       );
       expect(result.current.touched).toEqual({});
       act(() => {
-        setupUseTranslation({ lang: 'en' });
+        setupUseTranslation({ lang: 'en-GB' });
       });
       rerender();
       expect(mockValidate).not.toHaveBeenCalled();
@@ -402,7 +402,7 @@ describe('useForm Hook', () => {
       mockValidate.mockReturnValue({ name: 'Error en nuevo idioma' });
 
       act(() => {
-        setupUseTranslation({ lang: 'en' });
+        setupUseTranslation({ lang: 'en-GB' });
       });
       rerender();
 
@@ -431,7 +431,7 @@ describe('useForm Hook', () => {
 
       mockValidate.mockReturnValue({});
       act(() => {
-        setupUseTranslation({ lang: 'en' });
+        setupUseTranslation({ lang: 'en-GB' });
       });
       rerender();
       expect(result.current.errors).toEqual({});

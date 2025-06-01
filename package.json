@@ -10,6 +10,7 @@
     "build": "lerna run build",
     "test": "lerna run test",
     "lint": "lerna run lint",
+    "publish": "lerna publish from-package --yes",
     "docker:build:nocache": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml build --no-cache",
     "docker:up": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml up",
     "docker:up:build": "docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml up --build",
