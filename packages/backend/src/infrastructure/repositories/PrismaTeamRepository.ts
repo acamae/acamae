@@ -15,7 +15,7 @@ export class PrismaTeamRepository implements TeamRepository {
   /**
    * Convierte un modelo de Prisma a una entidad de dominio
    */
-  private _toDomainModel(prismaTeam: any): Team {
+  private _toDomainModel(prismaTeam: any): Team | null {
     if (!prismaTeam) return null;
     
     return {
@@ -47,7 +47,7 @@ export class PrismaTeamRepository implements TeamRepository {
     const teams = await this.prisma.team.findMany({
       include: { user: true }
     });
-    return teams.map(team => this._toDomainModel(team));
+    return teams.map(team => this._toDomainModel(team)).filter((t): t is Team => t !== null);
   }
 
   /**
@@ -69,7 +69,7 @@ export class PrismaTeamRepository implements TeamRepository {
       where: { userId: parseInt(userId) },
       include: { user: true }
     });
-    return teams.map(team => this._toDomainModel(team));
+    return teams.map(team => this._toDomainModel(team)).filter((t): t is Team => t !== null);
   }
 
   /**
@@ -85,7 +85,7 @@ export class PrismaTeamRepository implements TeamRepository {
       },
       include: { user: true }
     });
-    return this._toDomainModel(team);
+    return this._toDomainModel(team) as Team;
   }
 
   /**
@@ -101,7 +101,7 @@ export class PrismaTeamRepository implements TeamRepository {
       },
       include: { user: true }
     });
-    return this._toDomainModel(team);
+    return this._toDomainModel(team) as Team;
   }
 
   /**

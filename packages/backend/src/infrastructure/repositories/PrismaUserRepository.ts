@@ -16,7 +16,7 @@ export class PrismaUserRepository implements UserRepository {
   /**
    * Convierte un modelo de Prisma a una entidad de dominio
    */
-  private _toDomainModel(prismaUser: any): User {
+  private _toDomainModel(prismaUser: any): User | null {
     if (!prismaUser) return null;
     
     return {
@@ -42,7 +42,7 @@ export class PrismaUserRepository implements UserRepository {
    */
   async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
-    return users.map(user => this._toDomainModel(user));
+    return users.map(user => this._toDomainModel(user)).filter((u): u is User => u !== null);
   }
 
   /**
@@ -52,7 +52,7 @@ export class PrismaUserRepository implements UserRepository {
     const user = await this.prisma.user.findUnique({
       where: { id: parseInt(id) }
     });
-    return user ? this._toDomainModel(user) : null;
+    return user ? this._toDomainModel(user) as User : null;
   }
 
   /**
@@ -93,7 +93,7 @@ export class PrismaUserRepository implements UserRepository {
       }
     });
     
-    return this._toDomainModel(user);
+    return this._toDomainModel(user) as User;
   }
 
   /**
@@ -119,7 +119,7 @@ export class PrismaUserRepository implements UserRepository {
       data
     });
     
-    return this._toDomainModel(user);
+    return this._toDomainModel(user) as User;
   }
 
   /**
@@ -144,7 +144,7 @@ export class PrismaUserRepository implements UserRepository {
       }
     });
     
-    return this._toDomainModel(user);
+    return this._toDomainModel(user) as User;
   }
 
   /**
@@ -159,7 +159,7 @@ export class PrismaUserRepository implements UserRepository {
       }
     });
     
-    return this._toDomainModel(user);
+    return this._toDomainModel(user) as User;
   }
 
   /**
@@ -174,6 +174,6 @@ export class PrismaUserRepository implements UserRepository {
       }
     });
     
-    return this._toDomainModel(user);
+    return this._toDomainModel(user) as User;
   }
 } 

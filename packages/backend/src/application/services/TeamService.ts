@@ -75,7 +75,7 @@ export class TeamService {
 
     // Verificar que el equipo pertenece al usuario o es admin
     const user = await this.userRepository.findById(userId);
-    if (team.userId !== userId && user.role !== 'admin') {
+    if (!user || (team.userId !== userId && user.role !== 'admin')) {
       throw new Error('No tienes permiso para eliminar este equipo');
     }
 
