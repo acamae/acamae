@@ -17,6 +17,7 @@ export default {
     '^@styles/(.*)$': '<rootDir>/src/ui/styles/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
   },
+  modulePaths: ['<rootDir>/src'],
   setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
   transform: {
     '^.+\\.(ts|tsx|js|jsx)$': [

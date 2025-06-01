@@ -44,3 +44,15 @@ jobs:
         with:
           directory: ./packages/frontend/coverage
           fail_ci_if_error: false
+
+      - name: Listar contenido de Forms (debug)
+        run: ls -l src/ui/components/Forms
+        working-directory: ./packages/frontend
+
+      - name: Listar contenido de components (debug)
+        run: ls -l src/ui/components
+        working-directory: ./packages/frontend
+
+      - name: Mostrar rootDir de Jest (debug)
+        run: echo "rootDir en jest.config.js:" && grep rootDir jest.config.js || echo "No se encontró rootDir explícito"
+        working-directory: ./packages/frontend
